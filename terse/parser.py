@@ -28,6 +28,9 @@ ARITY: dict[str, tuple[int, int | None] | str] = {
     "add": (2, 2), "sub": (2, 2), "mul": (2, 2),
     "div": (2, 2), "mod": (2, 2), "pow": (2, 2),
     "neg": (1, 1),
+    # (divis x n): x is divisible by n -- fused (eq (mod x n) 0).
+    # Discovered by library learning (notes/library-learning.md).
+    "divis": (2, 2),
     # (dec x): x - 1. The hot primitive for counted recursion (fib etc.):
     # 3 tokens vs 5 for (sub x 1).
     "dec": (1, 1),
@@ -59,6 +62,10 @@ ARITY: dict[str, tuple[int, int | None] | str] = {
     # is truthy. (rev coll): reversed list or string.
     # (keep f coll): filter+map fusion -- list of non-null f(x) values.
     "map": (2, 2), "filter": (2, 2), "rev": (1, 1), "keep": (2, 2),
+    # (sum coll): sum of a list of numbers -- fused
+    # (fold (acc x) 0 coll (add acc x)).
+    # Discovered by library learning (notes/library-learning.md).
+    "sum": (1, 1),
     # strings / conversions
     "str": (1, 1), "int": (1, 1), "float": (1, 1),
     "upper": (1, 1), "lower": (1, 1),
