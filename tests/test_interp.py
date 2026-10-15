@@ -301,6 +301,18 @@ def test_cat():
     assert val("(cat)") == ""
 
 
+def test_fmt():
+    assert val('(fmt "hi {}, you are {}" "bob" 33)') == "hi bob, you are 33"
+    assert val('(fmt "n={}" 42)') == "n=42"
+    assert val('(fmt "no placeholders" 1 2)') == "no placeholders"
+    assert val('(fmt "{}" true)') == "True"
+    assert val('(fmt "{}-{}" "a" "b")') == "a-b"
+    # missing arg -> E207
+    with pytest.raises(TerseRuntimeError) as e:
+        val('(fmt "{} {}" "only-one")')
+    assert e.value.code == "E207"
+
+
 # --- strings / conversions ----------------------------------------------------
 
 

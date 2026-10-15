@@ -45,6 +45,8 @@ PROGRAMS = [
      "(print (fold (acc w) (dict) (list \"a\" \"b\" \"a\") (inc acc w)))"),
     ("computed-head-call",
      "(print ((fn (x) (mul x 2)) 21))"),
+    ("fmt-interp",
+     "(print (fmt \"hi {}, you are {}\" \"bob\" 33))"),
 ]
 
 
