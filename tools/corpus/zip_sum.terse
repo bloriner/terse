@@ -1,0 +1,1 @@
+(let a(list 1 2 3)(let b(list 4 5 6)(print(map(fn(i)(add(get a i)(get b i)))(range(len a))))))

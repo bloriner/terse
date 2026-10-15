@@ -1,0 +1,1 @@
+(let s "abracadabra"(print(fold(acc i)(dict)(range(len s))(inc acc(get s i)))))

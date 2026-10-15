@@ -1,0 +1,1 @@
+(let g(list 88 92 71 95 83)(print(div(fold(acc s)0 g(add acc s))(len g))))

@@ -1,0 +1,1 @@
+(print(keep(fn(w)(if(gt(len w)4)w))(list "hi" "hello" "hey" "world")))

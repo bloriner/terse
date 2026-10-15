@@ -1,0 +1,1 @@
+(print(fold(acc p)0(list(list 1 2)(list 3 4))(add acc(mul(get p 0)(get p 1)))))

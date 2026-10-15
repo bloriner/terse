@@ -1,0 +1,1 @@
+(for u(list "ann" "bob" "cid")(print(fmt "hello {}, welcome back" u)))

@@ -1,0 +1,1 @@
+(let n 42(let t 7(print(fmt "{} tests, {} failures" n t))))

@@ -3,7 +3,7 @@ import pytest
 
 import terse
 from terse import parse, run, run_source
-from terse.errors import TerseRuntimeError
+from terse.errors import ParseError, TerseRuntimeError
 
 
 def ev(src, gas=100_000):
@@ -214,6 +214,19 @@ def test_fold_empty():
     assert val('(fold (acc x) 7 (list) acc)') == 7
 
 
+def test_sum():
+    # fused (fold (acc x) 0 coll (add acc x)); discovered by library learning
+    assert val("(sum (list 1 2 3 4))") == 10
+    assert val("(sum (list))") == 0
+    assert val("(sum (list 1.5 2.5))") == 4.0
+    assert val("(sum (range 1 11))") == 55
+    assert _rcode('(sum "abc")') == "E208"
+    assert _rcode("(sum (list 1 \"a\"))") == "E208"
+    with pytest.raises(ParseError) as excinfo:
+        parse("(sum)")
+    assert excinfo.value.code == "E103"
+
+
 def test_inc_basic():
     assert val('(inc (dict "a" 1) "a")') == {"a": 2}
 
@@ -234,6 +247,20 @@ def test_inc_is_persistent():
 def test_dec():
     assert val("(dec 5)") == 4
     assert val("(dec 0)") == -1
+
+
+def test_divis():
+    # fused (eq (mod x n) 0); discovered by library learning
+    assert val("(divis 15 3)") is True
+    assert val("(divis 15 4)") is False
+    assert val("(divis 0 5)") is True
+    assert val("(divis 6.0 3)") is True
+    assert val("(divis 7 2)") is False
+    assert _rcode("(divis 1 0)") == "E201"
+    assert _rcode('(divis "a" 2)') == "E208"
+    with pytest.raises(ParseError) as excinfo:
+        parse("(divis 1)")
+    assert excinfo.value.code == "E103"
 
 
 def test_nary_if():

@@ -1,0 +1,1 @@
+(let d(dict "a" 1 "b" 2 "c" 3)(print(add(get d "a")(get d "c"))))

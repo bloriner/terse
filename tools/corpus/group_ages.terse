@@ -1,0 +1,1 @@
+(print(fold(acc u)(dict)(list(dict "n" "a" "age" 20)(dict "n" "b" "age" 30))(put acc(get u "n")(get u "age"))))

@@ -1,0 +1,1 @@
+(print(keep(fn(u)(if(ge(get u "age")18)(get u "name")))(list(dict "name" "ann" "age" 28)(dict "name" "bob" "age" 15)(dict "name" "cid" "age" 33))))

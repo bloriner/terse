@@ -1,0 +1,1 @@
+(print(map(fn(line)(split line ","))(split "a,b,c\n1,2,3" "\n")))

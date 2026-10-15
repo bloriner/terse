@@ -1,0 +1,1 @@
+(print(filter(fn(a)(lt a 0))(list 100 -20 50 -5 0)))

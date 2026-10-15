@@ -1,0 +1,1 @@
+(print(map(fn(p)(mul p 1.08))(list 100 50 25 80)))

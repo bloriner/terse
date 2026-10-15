@@ -1,0 +1,1 @@
+(print(filter(fn(o)(gt(mul(get o "qty")(get o "px"))50))(list(dict "qty" 3 "px" 10)(dict "qty" 2 "px" 25)(dict "qty" 1 "px" 5))))

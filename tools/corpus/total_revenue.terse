@@ -1,0 +1,1 @@
+(print(fold(acc o)0(list(dict "item" "a" "qty" 3 "px" 10)(dict "item" "b" "qty" 2 "px" 25))(add acc(mul(get o "qty")(get o "px")))))

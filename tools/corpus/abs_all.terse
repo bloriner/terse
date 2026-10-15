@@ -1,0 +1,1 @@
+(print(map(fn(x)(if(lt x 0)(neg x)x))(list -3 4 -5 0)))

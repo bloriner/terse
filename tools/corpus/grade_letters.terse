@@ -1,0 +1,1 @@
+(print(map(fn(s)(if(ge s 90)"A"(ge s 80)"B"(ge s 70)"C""F"))(list 95 82 77 68 91)))

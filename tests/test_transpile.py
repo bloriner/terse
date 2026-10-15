@@ -47,6 +47,10 @@ PROGRAMS = [
      "(print ((fn (x) (mul x 2)) 21))"),
     ("fmt-interp",
      "(print (fmt \"hi {}, you are {}\" \"bob\" 33))"),
+    ("divis",
+     "(print (list (divis 15 3) (divis 15 4) (divis 0 7)))"),
+    ("sum",
+     "(print (sum (list 1 2 3 4)))"),
 ]
 
 

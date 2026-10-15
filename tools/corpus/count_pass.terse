@@ -1,0 +1,1 @@
+(print(fold(acc s)0(list 88 92 71 95 83)(if(ge s 90)(add acc 1)acc)))

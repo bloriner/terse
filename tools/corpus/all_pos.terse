@@ -1,0 +1,1 @@
+(print(fold(acc x)true(list 3 8 45 2)(and acc(gt x 0))))

@@ -1,0 +1,1 @@
+(print(fold(acc v)(dict)(list "yes" "no" "yes" "yes" "no")(inc acc v)))

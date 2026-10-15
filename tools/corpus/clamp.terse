@@ -1,0 +1,1 @@
+(print(map(fn(x)(if(lt x 0)0(gt x 100)100 x))(list -5 50 150 30)))

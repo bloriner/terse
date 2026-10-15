@@ -1,0 +1,1 @@
+(print(join "-"(split(lower "Hello World Foo") " ")))

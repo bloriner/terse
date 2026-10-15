@@ -1,0 +1,1 @@
+(print(map(fn(s)(get(split s " ")0))(list "hello world" "foo bar" "baz")))

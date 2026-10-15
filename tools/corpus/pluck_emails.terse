@@ -1,0 +1,1 @@
+(print(map(fn(u)(get u "email"))(list(dict "email" "a@x.com")(dict "email" "b@x.com"))))

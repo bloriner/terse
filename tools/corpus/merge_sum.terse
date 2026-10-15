@@ -1,0 +1,1 @@
+(let a(dict "x" 1 "y" 2)(let b(dict "x" 10 "z" 5)(print(put a "x"(add(get a "x")(get b "x"))))))

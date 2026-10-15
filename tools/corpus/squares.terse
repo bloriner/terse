@@ -1,0 +1,1 @@
+(print(map(fn(x)(mul x x))(range 1 11)))

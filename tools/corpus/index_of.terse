@@ -1,0 +1,1 @@
+(let l(list "a" "b" "c")(print(fold(acc i)-1(range(len l))(if(and(eq acc -1)(eq(get l i)"b"))i acc))))

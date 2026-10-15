@@ -1,0 +1,1 @@
+(print(join "\n"(map(fn(r)(join "," r))(list(list "a" "b" "c")(list "1" "2" "3")))))
