@@ -204,6 +204,7 @@ class _Interpreter:
             "keep": self._op_keep,
             "cat": self._op_cat,
             "str": self._op_str,
+            "fmt": self._op_fmt,
             "int": self._op_int,
             "float": self._op_float,
             "upper": self._op_upper,
@@ -969,6 +970,32 @@ class _Interpreter:
     def _op_str(self, op, args, env):
         self._arity(op, args, 1)
         return str(self.evaluate(args[0], env))
+
+    def _op_fmt(self, op, args, env):
+        # (fmt template arg...) — "{}" placeholders filled left to right.
+        # Density: ties Python f-strings on sentences, beats (cat ...) there;
+        # (cat ...) still wins for single-char separators — see notes/density-v0.3.md.
+        if not args:
+            self._arity(op, args, 1)
+        template = self._as_str(op, self.evaluate(args[0], env), "as template")
+        vals = [self.evaluate(a, env) for a in args[1:]]
+        parts = template.split("{}")
+        need = len(parts) - 1
+        if need > len(vals):
+            raise TerseRuntimeError(
+                "E207",
+                f"fmt template has {need} placeholder(s) but only "
+                f"{len(vals)} argument(s)",
+                op=op,
+                pos=None,
+                expected=f"at least {need} args",
+                got=f"{len(vals)} args",
+                hint="add arguments or remove {} placeholders",
+            )
+        out = parts[0]
+        for i, part in enumerate(parts[1:]):
+            out += str(vals[i]) + part
+        return out
 
     def _op_int(self, op, args, env):
         self._arity(op, args, 1)

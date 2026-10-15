@@ -63,6 +63,8 @@ ARITY: dict[str, tuple[int, int | None] | str] = {
     "str": (1, 1), "int": (1, 1), "float": (1, 1),
     "upper": (1, 1), "lower": (1, 1),
     "split": (2, 2), "join": (2, 2),
+    # (fmt template arg...): "{}" placeholders filled left to right.
+    "fmt": (1, None),
     # effects
     "print": (0, None),
 }

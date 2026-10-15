@@ -12,7 +12,7 @@ AST contract (tuples):
     varref  = ("var", "name")
 """
 
-__version__ = "0.1.0"
+__version__ = "0.3.0"
 
 # NOTE: interp/to_python are exposed lazily (PEP 562) so importing this
 # package never risks a circular import regardless of worker import order.

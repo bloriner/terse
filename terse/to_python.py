@@ -411,6 +411,19 @@ class _Compiler:
                     stmts += sa
                     parts.append(f"str({ea})")
                 return stmts, '"".join([' + ", ".join(parts) + "])"
+            if op == "fmt":
+                # (fmt tmpl a b) -> tmpl.format(a, b); Python str.format
+                # shares the {} placeholder syntax. Missing-arg errors
+                # surface as IndexError in Python vs E207 in Terse.
+                if len(node) < 2:
+                    self._arity(node, 1, None)
+                st, et = self.gen(node[1])
+                stmts, parts = st, []
+                for arg in node[2:]:
+                    sa, ea = self.gen(arg)
+                    stmts += sa
+                    parts.append(ea)
+                return stmts, f"({et}).format({', '.join(parts)})"
             if op in ("str", "int", "float"):
                 self._arity(node, 1, 1)
                 s, e = self.gen(node[1])
