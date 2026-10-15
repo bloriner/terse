@@ -1,5 +1,10 @@
 # Terse
 
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![Tests](https://img.shields.io/badge/tests-193%20passing-brightgreen.svg)](tests/)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](terse/)
+[![Token ratio](https://img.shields.io/badge/tokens-0.60%E2%80%931.00x%20vs%20Python-orange.svg)](bench/)
+
 **An AI-native code language: a machine-designed prefix HIR for AI coding agents.**
 
 AI agents write human-designed languages — verbose, infix, and syntax-error-prone. Terse is a canonical prefix intermediate representation designed for machines: fixed-arity ops, one spelling per construct, structured errors built for repair loops, and a surface syntax measured to be token-cheaper than Python.
