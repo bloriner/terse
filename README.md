@@ -12,7 +12,7 @@ Terse removes the decisions a model shouldn't have to make:
 
 - **Prefix, always.** `(add a (mul b c))` — the op comes first, so the structure of every form is known after one token. No precedence tables, no associativity, exactly one way to parenthesize anything.
 - **Canonical.** One spelling per construct, enforced by the parser. `if` is always prefix; `true`/`false`/`null` are always lowercase; bare symbols are always variable references. Canonicality shrinks the output distribution a model must learn and makes diffs, caches, and dedup exact.
-- **Dense.** The v0.2 syntax was shaped by `cl100k_base` measurements: juxtaposed parens, head-position calls, n-ary `if`, and fusion ops for hot patterns. Reference solutions measure **0.69–0.98× Python tokens** across 8 bench tasks (see `bench/`).
+- **Dense.** The v0.2 syntax was shaped by `cl100k_base` measurements: juxtaposed parens, head-position calls, n-ary `if`, and fusion ops for hot patterns. Reference solutions measure **0.60–1.00× Python tokens** across 8 bench tasks (see `bench/`).
 - **Fixed arities, checked at parse time.** `(add 1)` fails with `E103 arity-mismatch` before anything runs.
 - **Structured errors for repair loops.** Every failure is a `TerseError` with a stable code (`E100`–`E300`), phase, op, source position, `expected`/`got`, and a concrete `hint`. Feed `err.to_dict()` back to the model and the fix is usually one shot.
 - **Constrained-decoding grammar.** `terse/grammar.gbnf` is a GBNF grammar for the full language — under constrained decoding, syntax errors become impossible, and the only remaining failures are semantic ones the error protocol already covers.
@@ -58,8 +58,8 @@ A taste of the language:
 (def fib(n)(if(lt n 2)n(add(fib(dec n))(fib(dec(dec n))))))
 (print(fib 10))                               ; => 55
 
-; fizzbuzz: n-ary if, juxtaposed parens
-(for i(range 1 21)(print(if(eq(mod i 15)0)"fizzbuzz"(eq(mod i 3)0)"fizz"(eq(mod i 5)0)"buzz"i)))
+; fizzbuzz: n-ary if, divisibility op, juxtaposed parens
+(for i(range 1 21)(print(if(divis i 15)"fizzbuzz"(divis i 3)"fizz"(divis i 5)"buzz"i)))
 
 ; wordcount: fold + inc, no pre-seeding needed
 (print(fold(acc w)(dict)(list "a" "b" "a")(inc acc w)))  ; => {'a': 2, 'b': 1}
@@ -87,7 +87,7 @@ Key semantics: `div` is true division; `and`/`or` are n-ary and short-circuit; `
 
 ## Status
 
-**v0.3** — 160 tests green. New: `fmt` string interpolation (`(fmt "hi {}" name)` — ties Python f-strings, beats `cat` on sentences; see `notes/density-v0.3.md` for the measured decision rule). Rejected after measurement: `->` threading macro (13 tokens vs 9 nested — BPE doesn't fuse `(->`). v0.2 density ratios hold: 0.69–1.00× Python tokens across the 8-task benchmark, all stdout MATCH. MCP server (`mcp/`) exposes eval/transpile/token-count/parse as agent tools over stdio.
+**v0.3** — 160 tests green. New: `fmt` string interpolation (`(fmt "hi {}" name)` — ties Python f-strings, beats `cat` on sentences; see `notes/density-v0.3.md` for the measured decision rule). Rejected after measurement: `->` threading macro (13 tokens vs 9 nested — BPE doesn't fuse `(->`). v0.2 density ratios hold: 0.60–1.00× Python tokens across the 8-task benchmark, all stdout MATCH. MCP server (`mcp/`) exposes eval/transpile/token-count/parse as agent tools over stdio.
 
 ## Roadmap
 

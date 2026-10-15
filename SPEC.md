@@ -114,6 +114,7 @@ even count.
 | `mul` | 2 | number,number | multiplication | `(mul 2 3)` → `6` |
 | `div` | 2 | number,number | **true division** (never floor) | `(div 7 2)` → `3.5` |
 | `mod` | 2 | number,number | remainder | `(mod 7 3)` → `1` |
+| `divis` | 2 | number,number | divisibility: `(eq (mod x n) 0)` fused; E201 on zero divisor | `(divis 15 3)` → `true` |
 | `pow` | 2 | number,number | exponentiation | `(pow 2 10)` → `1024` |
 | `neg` | 1 | number | unary negation | `(neg 5)` → `-5` |
 | `dec` | 1 | number | decrement: x − 1 | `(dec 5)` → `4` |
@@ -143,6 +144,7 @@ even count.
 | `map` | 2 | (fnexpr, coll) | list of f(x) | `(map f (list 1 2))` |
 | `filter` | 2 | (pred, coll) | elements where pred is truthy | `(filter pred l)` |
 | `keep` | 2 | (fnexpr, coll) | filter+map fusion: non-null f(x) values | `(keep f l)` |
+| `sum` | 1 | list of numbers | sum of a list; `(fold (acc x) 0 coll (add acc x))` fused; E208 on non-list/non-number | `(sum (list 1 2 3))` → `6` |
 | `rev` | 1 | list/str | reversed list or string | `(rev "abc")` → `"cba"` |
 | `cat` | 0+ | any | string concat of `str(arg)` each | `(cat "a" 1)` → `"a1"` |
 | `fmt` | 1+ | (template, any...) | `"{}"` placeholders filled left-to-right with `str(arg)`; E207 if placeholders outnumber args | `(fmt "hi {}, you are {}" "bob" 33)` → `"hi bob, you are 33"` |
@@ -263,7 +265,7 @@ in Terse vs idiomatic Python, stdout verified identical:
 
 | task | terse | python | ratio |
 |---|---|---|---|
-| fizzbuzz | 45 | 65 | **0.69** |
+| fizzbuzz | 39 | 65 | **0.60** |
 | fib | 29 | 36 | **0.81** |
 | wordcount | 38 | 55 | **0.69** |
 | factorial | 25 | 28 | 0.89 |
@@ -276,4 +278,6 @@ v0.1 ratios were 1.38–3.42×. Six of eight tasks are now decisively under
 0.85×. Known walls: Python's `[::-1]` slice is a unique density advantage
 (palindrome ties at 1.00); list comprehensions fuse filter+project in a way
 prefix syntax can't fully match (transform 0.98); the recursive factorial's
-`if`/`def` scaffolding costs 0.89×. See `bench/` and the density notes.
+`if`/`def` scaffolding costs 0.89×. The fizzbuzz row improved 45→39 tokens
+(0.69→0.60) when library learning discovered `divis` — see
+`notes/library-learning.md`. See `bench/` and the density notes.
