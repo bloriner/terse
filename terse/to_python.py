@@ -310,6 +310,12 @@ class _Compiler:
                 self._arity(node, 1, 1)
                 s, e = self.gen(node[1])
                 return s, f"({e}) - 1"
+            if op == "divis":
+                # Fused (eq (mod x n) 0): True iff x is divisible by n.
+                self._arity(node, 2, 2)
+                sx, ex = self.gen(node[1])
+                sn, en = self.gen(node[2])
+                return sx + sn, f"(({ex}) % ({en}) == 0)"
             if op in ("and", "or"):
                 return self._gen_andor(node)
             if op == "not":
@@ -347,6 +353,11 @@ class _Compiler:
                 return self._gen_rev(node)
             if op == "keep":
                 return self._gen_keep(node)
+            if op == "sum":
+                # Fused (fold (acc x) 0 coll (add acc x)).
+                self._arity(node, 1, 1)
+                s, e = self.gen(node[1])
+                return s, f"sum({e})"
             if op == "call":
                 return self._gen_call(node)
             if op == "return":
