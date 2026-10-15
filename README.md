@@ -1,5 +1,7 @@
 # Terse
 
+<p align="center"><img src="assets/logo.png" width="160" alt="Terse logo"></p>
+
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/tests-193%20passing-brightgreen.svg)](tests/)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](terse/)
