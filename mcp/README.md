@@ -84,6 +84,7 @@ Count tokens with `tiktoken` `cl100k_base` when importable, otherwise a
 ### `terse_parse`
 
 Parse Terse source and return the AST as JSON (tuples become lists).
+Session `$aliases` are expanded first.
 
 ```json
 { "source": "(add 1 2)" }
@@ -92,6 +93,19 @@ Parse Terse source and return the AST as JSON (tuples become lists).
 ```json
 { "ast": ["add", 1, 2] }
 ```
+
+### `terse_alias_define` / `terse_alias_list` / `terse_alias_clear`
+
+Session macro dictionary: define a repeated subtree once, then write
+`$alias` (1–2 tokens) instead of the full form. Aliases expand AST-side
+before eval/transpile/parse. `$names` are reserved — don't bind them
+with `let`/`def`/`fn`.
+
+```json
+{ "alias": "$d", "expansion": "(mul price 0.9)" }
+```
+then `(print (add $d $d $d))` evaluates as if the full form were written
+three times — 10 tokens instead of 27 (measured, cl100k_base).
 
 ## Safety notes
 

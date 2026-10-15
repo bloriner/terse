@@ -82,10 +82,10 @@ def test_handshake(mcp):
 def test_tools_list(mcp):
     resp = rpc(mcp, "tools/list", msg_id=2)
     names = [t["name"] for t in resp["result"]["tools"]]
-    assert names == ["terse_eval", "terse_transpile", "terse_tokens", "terse_parse"]
+    assert names == ["terse_eval", "terse_transpile", "terse_tokens", "terse_parse",
+                     "terse_alias_define", "terse_alias_list", "terse_alias_clear"]
     for tool in resp["result"]["tools"]:
         assert tool["inputSchema"]["type"] == "object"
-        assert "source" in tool["inputSchema"]["properties"]
 
 
 def test_terse_eval(mcp):
@@ -170,3 +170,44 @@ def test_unknown_tool(mcp):
     result, payload = call_tool(mcp, "terse_frobnicate", {}, msg_id=13)
     assert result.get("isError")
     assert payload["error"]["code"] == "E400"
+
+
+def test_alias_define_eval(mcp):
+    result, payload = call_tool(
+        mcp, "terse_alias_define",
+        {"alias": "$dbl", "expansion": "(mul x 2)"}, msg_id=20,
+    )
+    assert payload["defined"] is True
+    # $dbl used twice; x bound via let
+    result, payload = call_tool(
+        mcp, "terse_eval",
+        {"source": "(let x 21 (add $dbl $dbl))"}, msg_id=21,
+    )
+    assert payload["value"] == 84
+
+
+def test_alias_list_and_clear(mcp):
+    call_tool(mcp, "terse_alias_define",
+              {"alias": "$one", "expansion": "1"}, msg_id=22)
+    result, payload = call_tool(mcp, "terse_alias_list", {}, msg_id=23)
+    assert payload["aliases"]["$one"] == "1"
+    result, payload = call_tool(mcp, "terse_alias_clear", {}, msg_id=24)
+    assert payload["cleared"] >= 1
+    result, payload = call_tool(mcp, "terse_alias_list", {}, msg_id=25)
+    assert payload["aliases"] == {}
+
+
+def test_alias_bad_name_rejected(mcp):
+    result, payload = call_tool(
+        mcp, "terse_alias_define",
+        {"alias": "nope", "expansion": "1"}, msg_id=26,
+    )
+    assert result.get("isError")
+
+
+def test_alias_cycle_rejected(mcp):
+    result, payload = call_tool(
+        mcp, "terse_alias_define",
+        {"alias": "$loop", "expansion": "$loop"}, msg_id=27,
+    )
+    assert result.get("isError")

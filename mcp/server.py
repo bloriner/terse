@@ -15,6 +15,7 @@ from __future__ import annotations
 import json
 import math
 import os
+import re
 import sys
 
 PROTOCOL_VERSION = "2024-11-05"
@@ -130,7 +131,8 @@ def tool_terse_eval(args: dict) -> dict:
         raise ValueError("'gas' must be >= 1")
     gas = min(gas, MAX_GAS)
     try:
-        value, output = terse.run_source(source, gas=gas)
+        ast = _expand_aliases(terse.parse(source))
+        value, output = terse.run(ast, gas=gas)
     except TerseError as exc:
         return error_payload(exc)
     except Exception as exc:  # never leak tracebacks
@@ -142,7 +144,7 @@ def tool_terse_eval(args: dict) -> dict:
 def tool_terse_transpile(args: dict) -> dict:
     source = _require_source(args)
     try:
-        python_src = terse.to_python(terse.parse(source))
+        python_src = terse.to_python(_expand_aliases(terse.parse(source)))
     except TerseError as exc:
         return error_payload(exc)
     except Exception as exc:
@@ -164,7 +166,7 @@ def tool_terse_tokens(args: dict) -> dict:
 def tool_terse_parse(args: dict) -> dict:
     source = _require_source(args)
     try:
-        ast = terse.parse(source)
+        ast = _expand_aliases(terse.parse(source))
     except TerseError as exc:
         return error_payload(exc)
     except Exception as exc:
@@ -172,12 +174,84 @@ def tool_terse_parse(args: dict) -> dict:
     return {"ast": ast_to_json(ast)}
 
 
+# ---------------------------------------------------------------------------
+# Session macro dictionary: $alias -> expansion AST.
+#
+# The agent defines an alias once per session for a repeated subtree, then
+# writes $alias (1-2 tokens) instead of the full form every time after.
+# Expansion happens AST-side after parsing: ("var", "$name") nodes are
+# replaced by the stored expansion. Rule: $names are reserved for aliases —
+# do not bind them with let/def/fn params.
+# ---------------------------------------------------------------------------
+
+_ALIASES: dict[str, tuple] = {}
+_ALIAS_SOURCES: dict[str, str] = {}
+_ALIAS_RE = re.compile(r"^\$[A-Za-z_][A-Za-z0-9_]*$")
+_MAX_ALIAS_DEPTH = 10
+
+
+def _expand_aliases(node, _depth=0):
+    if _depth > _MAX_ALIAS_DEPTH:
+        raise ValueError("alias expansion cycle detected (max depth 10)")
+    if isinstance(node, tuple):
+        if (
+            len(node) == 2
+            and node[0] == "var"
+            and isinstance(node[1], str)
+            and node[1] in _ALIASES
+        ):
+            return _expand_aliases(_ALIASES[node[1]], _depth + 1)
+        return tuple(_expand_aliases(x, _depth) for x in node)
+    if isinstance(node, list):
+        return [_expand_aliases(x, _depth) for x in node]
+    return node
+
+
+def tool_terse_alias_define(args: dict) -> dict:
+    alias = args.get("alias")
+    expansion = args.get("expansion")
+    if not isinstance(alias, str) or not _ALIAS_RE.match(alias):
+        raise ValueError(
+            "alias must look like $name (dollar + letter/underscore, then alphanumerics)"
+        )
+    if not isinstance(expansion, str):
+        raise ValueError("missing or invalid 'expansion': expected a string")
+    try:
+        ast = terse.parse(expansion)
+    except TerseError as exc:
+        return error_payload(exc)
+    except Exception as exc:
+        return error_payload(exc)
+    # Catch direct self-reference early; indirect cycles die at expand time.
+    _ALIASES[alias] = ast
+    _ALIAS_SOURCES[alias] = expansion
+    try:
+        _expand_aliases(ast)
+    except ValueError as exc:
+        del _ALIASES[alias]
+        del _ALIAS_SOURCES[alias]
+        raise exc
+    return {"defined": True, "alias": alias, "expansion": expansion}
+
+
+def tool_terse_alias_list(args: dict) -> dict:
+    return {"aliases": dict(_ALIAS_SOURCES)}
+
+
+def tool_terse_alias_clear(args: dict) -> dict:
+    n = len(_ALIASES)
+    _ALIASES.clear()
+    _ALIAS_SOURCES.clear()
+    return {"cleared": n}
+
+
 TOOLS = {
     "terse_eval": {
         "fn": tool_terse_eval,
         "description": (
             "Evaluate Terse source with the tree-walking interpreter. "
-            "Returns the result value (JSON-safe) and captured print output lines."
+            "Returns the result value (JSON-safe) and captured print output lines. "
+            "Session $aliases (see terse_alias_define) are expanded before evaluation."
         ),
         "inputSchema": {
             "type": "object",
@@ -220,7 +294,7 @@ TOOLS = {
     },
     "terse_parse": {
         "fn": tool_terse_parse,
-        "description": "Parse Terse source and return the AST as JSON (tuples become lists).",
+        "description": "Parse Terse source and return the AST as JSON (tuples become lists). Session $aliases are expanded first.",
         "inputSchema": {
             "type": "object",
             "properties": {
@@ -228,6 +302,33 @@ TOOLS = {
             },
             "required": ["source"],
         },
+    },
+    "terse_alias_define": {
+        "fn": tool_terse_alias_define,
+        "description": (
+            "Define a session macro: $alias expands to the given Terse form everywhere "
+            "it appears as a variable afterwards. Define a repeated subtree once, then "
+            "write $alias (1-2 tokens) instead of the full form. $names are reserved for "
+            "aliases — do not bind them with let/def/fn."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "alias": {"type": "string", "description": "Alias name, e.g. $1."},
+                "expansion": {"type": "string", "description": "Terse source the alias expands to."},
+            },
+            "required": ["alias", "expansion"],
+        },
+    },
+    "terse_alias_list": {
+        "fn": tool_terse_alias_list,
+        "description": "List the session's defined $aliases and their expansions.",
+        "inputSchema": {"type": "object", "properties": {}},
+    },
+    "terse_alias_clear": {
+        "fn": tool_terse_alias_clear,
+        "description": "Clear all session $aliases.",
+        "inputSchema": {"type": "object", "properties": {}},
     },
 }
 
