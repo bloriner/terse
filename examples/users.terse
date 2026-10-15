@@ -1,0 +1,3 @@
+; users.terse -- filter age > 30, print matching names joined with ", ".
+(let users(list(dict "name" "ann" "age" 28)(dict "name" "bob" "age" 45)(dict "name" "cid" "age" 33)(dict "name" "dan" "age" 22))
+(print(join ", "(fold(acc u)(list)users(if(gt(get u "age")30)(push acc(get u "name"))acc)))))

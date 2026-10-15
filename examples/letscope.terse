@@ -1,0 +1,2 @@
+; letscope.terse -- nested let shadowing; prints 2 then 1.
+(let x 1(seq(let x 2(print x))(print x)))

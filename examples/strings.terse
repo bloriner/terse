@@ -1,0 +1,2 @@
+; strings.terse -- uppercase each word, join with "-".
+(print(join "-"(fold(acc w)(list)(split "the quick brown fox" " ")(push acc(upper w)))))

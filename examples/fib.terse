@@ -1,0 +1,3 @@
+; fib.terse -- recursive Fibonacci via def; prints 55.
+(def fib(n)(if(lt n 2)n(add(fib(dec n))(fib(dec(dec n))))))
+(print(fib 10))

@@ -1,0 +1,2 @@
+; listproc.terse -- squares of 1..10 via fold; prints the list.
+(print(fold(acc i)(list)(range 1 11)(push acc(mul i i))))
