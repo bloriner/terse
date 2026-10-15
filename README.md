@@ -78,7 +78,8 @@ terse/               the language package (pure Python 3.10+, stdlib only)
 SPEC.md              the language specification (syntax, ops, semantics, errors)
 examples/            8 sample programs + expected.json (exact expected stdout)
 bench/               TTCP benchmark: `python -m bench.run` (8 tasks, token ratios)
-tests/               pytest suite (158 tests)
+tests/               pytest suite (160 tests)
+mcp/                 MCP server: eval/transpile/tokens/parse as agent tools (stdio)
 LICENSE              Apache-2.0
 ```
 
@@ -86,13 +87,12 @@ Key semantics: `div` is true division; `and`/`or` are n-ary and short-circuit; `
 
 ## Status
 
-**v0.2 density pass complete** — interpreter, transpiler, GBNF grammar, and 8-task benchmark all working; the pytest suite is green (158 tests). Reference-solution token ratios vs idiomatic Python: 0.69–0.98× across all 8 tasks (6 under 0.85×). Not yet benchmarked against real LLM agents: TTCP with live repair loops is the next milestone.
+**v0.3** — 160 tests green. New: `fmt` string interpolation (`(fmt "hi {}" name)` — ties Python f-strings, beats `cat` on sentences; see `notes/density-v0.3.md` for the measured decision rule). Rejected after measurement: `->` threading macro (13 tokens vs 9 nested — BPE doesn't fuse `(->`). v0.2 density ratios hold: 0.69–1.00× Python tokens across the 8-task benchmark, all stdout MATCH. MCP server (`mcp/`) exposes eval/transpile/token-count/parse as agent tools over stdio.
 
 ## Roadmap
 
 - **TTCP benchmark vs Python** with real agents: first-try validity rate and tokens-to-correct-program on a task suite, with live repair loops driven by the error protocol.
 - **Paired training corpora**: Terse↔Python parallel programs for fine-tuning.
-- **MCP server**: parse/run/transpile/repair as tools an agent can call.
 - **Fine-tuning open models** on Terse for direct generation.
 - **More backends**: additional transpile targets beyond Python.
 

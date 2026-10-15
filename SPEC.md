@@ -145,6 +145,7 @@ even count.
 | `keep` | 2 | (fnexpr, coll) | filter+map fusion: non-null f(x) values | `(keep f l)` |
 | `rev` | 1 | list/str | reversed list or string | `(rev "abc")` → `"cba"` |
 | `cat` | 0+ | any | string concat of `str(arg)` each | `(cat "a" 1)` → `"a1"` |
+| `fmt` | 1+ | (template, any...) | `"{}"` placeholders filled left-to-right with `str(arg)`; E207 if placeholders outnumber args | `(fmt "hi {}, you are {}" "bob" 33)` → `"hi bob, you are 33"` |
 | `str` | 1 | any | convert to string | `(str 42)` → `"42"` |
 | `int` | 1 | str/float/bool | convert to int; E203 on failure | `(int "42")` → `42` |
 | `float` | 1 | str/int/bool | convert to float; E203 on failure | `(float "3.5")` |
