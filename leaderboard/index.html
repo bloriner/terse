@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Terse TTCP Leaderboard — token-efficiency ranking</title>
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --border: #30363d;
+    --fg: #e6edf3; --dim: #8b949e; --accent: #58a6ff; --good: #3fb950;
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--fg); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+         margin: 0; padding: 2rem 1rem; }
+  .wrap { max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 1.6rem; margin: 0 0 .25rem; }
+  h1 .terse { color: var(--accent); }
+  .sub { color: var(--dim); font-size: .9rem; margin-bottom: 1.5rem; }
+  .sub a { color: var(--accent); }
+  table { width: 100%; border-collapse: collapse; background: var(--panel);
+          border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  th, td { padding: .7rem .9rem; text-align: left; border-bottom: 1px solid var(--border); }
+  th { color: var(--dim); font-weight: normal; font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; }
+  tr:last-child td { border-bottom: none; }
+  tr.entry { cursor: pointer; }
+  tr.entry:hover { background: #1c2330; }
+  .rank { color: var(--dim); width: 3rem; }
+  .model { font-weight: bold; }
+  .kind { font-size: .75rem; color: var(--dim); border: 1px solid var(--border);
+          border-radius: 4px; padding: .1rem .4rem; margin-left: .5rem; }
+  .ratio { font-size: 1.1rem; font-weight: bold; color: var(--good); white-space: nowrap; }
+  .bar { height: 8px; background: #21262d; border-radius: 4px; margin-top: .35rem; min-width: 120px; }
+  .bar > div { height: 100%; background: var(--good); border-radius: 4px; }
+  .date { color: var(--dim); font-size: .85rem; white-space: nowrap; }
+  .detail td { background: #0a0d12; font-size: .85rem; }
+  .detail .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: .5rem; }
+  .task { border: 1px solid var(--border); border-radius: 6px; padding: .5rem .6rem; }
+  .task .name { color: var(--dim); }
+  .task .r { color: var(--good); font-weight: bold; }
+  .task .toks { color: var(--dim); font-size: .75rem; }
+  .notes { color: var(--dim); font-size: .85rem; margin-top: .75rem; }
+  .foot { color: var(--dim); font-size: .8rem; margin-top: 1.5rem; }
+  .err { color: #f85149; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1><span class="terse">Terse</span> TTCP Leaderboard</h1>
+  <div class="sub">
+    Token-efficiency ranking: average <strong>terse&nbsp;tokens ÷ python&nbsp;tokens</strong>
+    across 8 fixed tasks. Lower is better; 1.00 = parity with Python.
+    <a href="methodology.md">Methodology</a> ·
+    <a href="https://github.com/bloriner/terse">Repo</a>
+  </div>
+  <table id="board">
+    <thead><tr>
+      <th>#</th><th>Model</th><th>Avg ratio</th><th>Date</th>
+    </tr></thead>
+    <tbody id="rows"><tr><td colspan="4" class="date">loading…</td></tr></tbody>
+  </table>
+  <div class="foot" id="meta"></div>
+</div>
+<script>
+fetch('results.json').then(r => {
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
+}).then(data => {
+  const rows = document.getElementById('rows');
+  const entries = [...data.entries].sort((a, b) => a.avg_ratio - b.avg_ratio);
+  rows.innerHTML = '';
+  entries.forEach((e, i) => {
+    const tr = document.createElement('tr');
+    tr.className = 'entry';
+    const pct = Math.min(100, e.avg_ratio * 100);
+    tr.innerHTML =
+      '<td class="rank">' + (i + 1) + '</td>' +
+      '<td><span class="model">' + esc(e.model) + '</span>' +
+      '<span class="kind">' + esc(e.kind) + '</span></td>' +
+      '<td><span class="ratio">' + e.avg_ratio.toFixed(2) + '×</span>' +
+      '<div class="bar"><div style="width:' + pct + '%"></div></div></td>' +
+      '<td class="date">' + esc(e.date) + '</td>';
+    const d = document.createElement('tr');
+    d.className = 'detail'; d.style.display = 'none';
+    let cells = '';
+    data.tasks.forEach(t => {
+      const p = e.per_task[t];
+      cells += '<div class="task"><span class="name">' + esc(t) + '</span><br>' +
+        '<span class="r">' + p.ratio.toFixed(2) + '×</span> ' +
+        '<span class="toks">' + p.terse_tokens + '/' + p.python_tokens +
+        (p.stdout_match ? '' : ' ⚠') + '</span></div>';
+    });
+    d.innerHTML = '<td colspan="4"><div class="grid">' + cells + '</div>' +
+      (e.notes ? '<div class="notes">' + esc(e.notes) + '</div>' : '') + '</td>';
+    tr.addEventListener('click', () => {
+      d.style.display = d.style.display === 'none' ? '' : 'none';
+    });
+    rows.appendChild(tr); rows.appendChild(d);
+  });
+  document.getElementById('meta').textContent =
+    'tokenizer: ' + data.tokenizer + ' · updated ' + data.updated +
+    ' · leaderboard v' + data.version + ' · click a row for per-task detail';
+}).catch(err => {
+  document.getElementById('rows').innerHTML =
+    '<tr><td colspan="4" class="err">could not load results.json: ' + esc(String(err)) + '</td></tr>';
+});
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+</script>
+</body>
+</html>

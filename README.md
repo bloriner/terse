@@ -91,7 +91,7 @@ Key semantics: `div` is true division; `and`/`or` are n-ary and short-circuit; `
 
 ## Roadmap
 
-- **TTCP benchmark vs Python** with real agents: first-try validity rate and tokens-to-correct-program on a task suite, with live repair loops driven by the error protocol.
+- **TTCP leaderboard** — live in [`leaderboard/`](leaderboard/) (methodology, scoring tool, static page): models compete on token-efficiency vs Python across the 8 fixed bench tasks, stdout-verified. First-try validity with live repair loops is the defined-but-unmeasured second metric.
 - **Paired training corpora**: Terse↔Python parallel programs for fine-tuning.
 - **Fine-tuning open models** on Terse for direct generation.
 - **More backends**: additional transpile targets beyond Python.
