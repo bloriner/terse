@@ -1,0 +1,8 @@
+G: recursive fib in Terse; fib(0)=0, fib(1)=1, fib(n)=fib(n-1)+fib(n-2)
+P: base: (le n 1) -> n  [one check covers 0,1]
+P: rec: (add (fib (dec n)) (fib (sub n 2))); def for recursion
+A: iterative O(n)/O(1) vs recursive O(2^n)
+T: +iter fast / -task wants recursive -> go recursive
+V: edge n<0 -> never hits base; add (assert (ge n 0))
+V: check fib(10)=55 after write
+!: plan solid; write it

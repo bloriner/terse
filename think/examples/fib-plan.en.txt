@@ -1,0 +1,15 @@
+Let me think about this task. I need to write a recursive Fibonacci function in Terse.
+
+First, let me recall the definition: fib(0) = 0, fib(1) = 1, and fib(n) = fib(n-1) + fib(n-2) for n > 1.
+
+For the base case, I could write two separate checks, but it's cleaner to use a single condition: if n <= 1, return n. That handles both fib(0) and fib(1) correctly.
+
+For the recursive case, the function needs to call itself twice and add the results. In Terse that would be (add (fib (dec n)) (fib (sub n 2))). I'll use `def` for the named function since it supports recursion.
+
+Now, about efficiency: the naive recursion is O(2^n) time, which is slow for large n. An iterative version would be O(n) time and O(1) space. But the task explicitly asks for a recursive implementation, so recursion it is — I'll note the tradeoff.
+
+Edge cases I should consider: negative inputs. For n < 0, the recursion would never reach the base case — it would recurse forever, or at least until gas runs out. I should guard against that, either with an assertion or by documenting that n must be non-negative. I'll add an assert.
+
+Finally, let me verify with a known value: fib(10) should equal 55. I'll run that as a check after writing the code.
+
+OK, I'm confident in the plan. Let me write it.

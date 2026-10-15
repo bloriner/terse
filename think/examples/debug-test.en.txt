@@ -1,0 +1,11 @@
+OK, the test failed. Let me look at the failure output.
+
+The error is: `[E200 runtime] unbound variable 'fib'`. So the interpreter is telling me that `fib` isn't bound in the current scope. There's also a hint suggesting a similar name — let me read it. The hint says "did you mean 'fibb'?" — interesting, so there IS something named `fibb` in scope.
+
+Hmm, wait. Let me think about what could cause this. Two hypotheses come to mind. First, maybe I defined the function with `def` inside a `let` block in the test, which would scope it locally, and then tried to call it from outside. But actually `def` is top-level only in Terse, so that would have been a parse error, not E200. So that hypothesis is probably wrong.
+
+The second hypothesis fits the hint better: I probably typo'd the definition as `(def fibb (n) ...)` with two b's, but I'm calling `(fib 10)`. The did-you-mean hint basically confirms it. Let me verify by checking the definition line.
+
+Yes — confirmed, the def says `fibb`. Simple typo. Let me fix it to `fib` and re-run the test.
+
+The test passes now, and fib(10) = 55 as expected. Done.

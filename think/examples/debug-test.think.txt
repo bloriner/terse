@@ -1,0 +1,8 @@
+O: test fails: [E200] unbound 'fib'; hint did-you-mean 'fibb'
+H1: def scoped inside let-block; call outside
+H2: typo: def'd 'fibb', called 'fib'
+?: H1 would be parse error not E200 (def is top-level-only) -> H1 unlikely
+O: def line reads (def fibb ...) -> H2 confirmed
+F: rename fibb->fib; rerun
+O: pass; fib(10)=55
+!: done
