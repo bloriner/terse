@@ -34,6 +34,7 @@ missing interpreter do not fail the run).
 
 from __future__ import annotations
 
+import argparse
 import io
 import re
 import subprocess
@@ -43,6 +44,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 TASKS = ROOT / "bench" / "tasks"
+
+ENCODINGS = ("cl100k_base", "o200k_base", "p50k_base")
 
 
 # --- tokenizers ---------------------------------------------------------------
@@ -55,14 +58,33 @@ def _fallback_count(src: str) -> int:
     return len(_TOKEN_RE.findall(src))
 
 
-def _get_tokenizer() -> tuple[str, object]:
-    """Return (label, encode_fn). Prefers tiktoken cl100k_base."""
+def _get_tokenizer(encoding: str = "cl100k_base") -> tuple[str, object]:
+    """Return (label, encode_fn) for the requested tiktoken encoding.
+
+    Raises SystemExit(2) with a clear message if tiktoken or the
+    encoding is unavailable.
+    """
     try:
         import tiktoken  # type: ignore
-
-        enc = tiktoken.get_encoding("cl100k_base")
-        return "tiktoken cl100k_base", enc.encode
     except Exception:
+        print("error: tiktoken is not installed; cannot use "
+              f"--tokenizer {encoding}", file=sys.stderr)
+        sys.exit(2)
+    try:
+        enc = tiktoken.get_encoding(encoding)
+    except Exception as exc:
+        print(f"error: tiktoken encoding {encoding!r} is unavailable: {exc}",
+              file=sys.stderr)
+        print(f"supported encodings: {', '.join(ENCODINGS)}", file=sys.stderr)
+        sys.exit(2)
+    return f"tiktoken {encoding}", enc.encode
+
+
+def _legacy_tokenizer() -> tuple[str, object]:
+    """Original default: cl100k_base, else the documented fallback."""
+    try:
+        return _get_tokenizer("cl100k_base")
+    except SystemExit:
         return "fallback (whitespace/punctuation split)", _fallback_count
 
 
@@ -160,12 +182,23 @@ def _run_python(path: Path) -> tuple[int, str, str]:
 
 # --- main ---------------------------------------------------------------------
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        description="TTCP benchmark: Terse vs Python token ratios.")
+    parser.add_argument(
+        "--tokenizer", default=None, choices=ENCODINGS,
+        help=("tiktoken encoding to count with "
+              "(default: cl100k_base, with legacy fallback)"))
+    args = parser.parse_args(argv)
+
     if not TASKS.is_dir():
         print(f"error: tasks directory not found: {TASKS}", file=sys.stderr)
         return 2
 
-    tok_label, encode_fn = _get_tokenizer()
+    if args.tokenizer is None:
+        tok_label, encode_fn = _legacy_tokenizer()
+    else:
+        tok_label, encode_fn = _get_tokenizer(args.tokenizer)
     print(f"tokenizer: {tok_label}\n")
 
     names = sorted(p.stem for p in TASKS.glob("*.terse"))

@@ -46,6 +46,14 @@ v0.2 ratios: 0.69–1.00× (6 of 8 tasks under 0.85×).
    (`(` + `+` don't fuse). Symbolic ops are WORSE than word ops in
    head position. The v0.1 English-word ops were accidentally optimal.
 
+   > CORRECTION (2026-10-15, tiktoken 0.14.0): re-measured `(+` as
+   > ONE token (`['(+']`) on cl100k_base/o200k_base — the merge table
+   > changed (or the v0.2 measurement was wrong). The "symbolic ops are
+   > worse" pillar no longer holds. No density reason to prefer words
+   > over symbols in head position now, but also no reason to switch:
+   > words read better at equal cost. Pin tiktoken versions on every
+   > density claim. See notes/dialects.md.
+
 3. **`let` for single-use bindings** — costs 3 tokens (`(let`, name, `)`).
    Inlining single-use bindings is always cheaper. But `let` is still
    needed for double-use (palindrome's `s` used twice).
