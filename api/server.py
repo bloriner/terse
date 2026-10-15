@@ -11,6 +11,10 @@ Endpoints:
   GET  /ledger       ?limit=&offset=  receipts, newest first
   GET  /health       {"ok": true}
 
+Receipts are HMAC-SHA256 signed (billing.receipts) when TERSE_METER_SECRET
+is set, so usage reported to Stripe can be verified end to end. Without the
+secret the receipt carries "sig": null (verification will reject it).
+
 Run:
   python -m api.server            # from the repo root, :8080
   python -m api.server 9000       # custom port
@@ -37,6 +41,11 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from terse import run_source  # noqa: E402
 from terse.errors import TerseError  # noqa: E402
+
+try:
+    from billing.receipts import sign_receipt  # noqa: E402
+except ImportError:  # pragma: no cover - billing package missing
+    sign_receipt = None  # type: ignore
 
 # ---------------------------------------------------------------------------
 # Pricing
@@ -93,9 +102,15 @@ def _db() -> sqlite3.Connection:
              price_usd REAL NOT NULL,
              stdout_match INTEGER NOT NULL,
              method TEXT NOT NULL,
-             flags TEXT NOT NULL DEFAULT '[]'
+             flags TEXT NOT NULL DEFAULT '[]',
+             sig TEXT
            )"""
     )
+    # Migrate older ledgers that predate receipt signing (2026-10-15).
+    try:
+        conn.execute("ALTER TABLE receipts ADD COLUMN sig TEXT")
+    except sqlite3.OperationalError:
+        pass  # column already there
     conn.commit()
     return conn
 
@@ -105,8 +120,8 @@ def _store_receipt(rec: dict) -> None:
     try:
         conn.execute(
             "INSERT INTO receipts (id, ts, terse_tokens, python_tokens, tokens_saved,"
-            " savings_pct, price_usd, stdout_match, method, flags)"
-            " VALUES (?,?,?,?,?,?,?,?,?,?)",
+            " savings_pct, price_usd, stdout_match, method, flags, sig)"
+            " VALUES (?,?,?,?,?,?,?,?,?,?,?)",
             (
                 rec["receipt_id"],
                 rec["ts"],
@@ -118,6 +133,7 @@ def _store_receipt(rec: dict) -> None:
                 1 if rec["stdout_match"] else 0,
                 rec["method"],
                 json.dumps(rec["flags"]),
+                rec.get("sig"),
             ),
         )
         conn.commit()
@@ -130,7 +146,7 @@ def _get_receipt(rid: str) -> dict | None:
     try:
         row = conn.execute(
             "SELECT id, ts, terse_tokens, python_tokens, tokens_saved,"
-            " savings_pct, price_usd, stdout_match, method, flags"
+            " savings_pct, price_usd, stdout_match, method, flags, sig"
             " FROM receipts WHERE id = ?",
             (rid,),
         ).fetchone()
@@ -149,6 +165,7 @@ def _get_receipt(rid: str) -> dict | None:
         "stdout_match": bool(row[7]),
         "method": row[8],
         "flags": json.loads(row[9]),
+        "sig": row[10],
     }
 
 
@@ -157,7 +174,7 @@ def _list_receipts(limit: int, offset: int) -> list[dict]:
     try:
         rows = conn.execute(
             "SELECT id, ts, terse_tokens, python_tokens, tokens_saved,"
-            " savings_pct, price_usd, stdout_match, method, flags"
+            " savings_pct, price_usd, stdout_match, method, flags, sig"
             " FROM receipts ORDER BY ts DESC, rowid DESC LIMIT ? OFFSET ?",
             (limit, offset),
         ).fetchall()
@@ -175,6 +192,7 @@ def _list_receipts(limit: int, offset: int) -> list[dict]:
             "stdout_match": bool(r[7]),
             "method": r[8],
             "flags": json.loads(r[9]),
+            "sig": r[10],
         }
         for r in rows
     ]
@@ -367,6 +385,14 @@ class MeterHandler(BaseHTTPRequestHandler):
             "method": method,
             "flags": flags,
         }
+        # Sign the receipt so billing can verify it end to end. Without
+        # TERSE_METER_SECRET the receipt is unsigned (sig=None) and the
+        # billing pipeline will refuse to report it.
+        secret = os.environ.get("TERSE_METER_SECRET", "")
+        if secret and sign_receipt is not None:
+            rec = sign_receipt(rec, secret)
+        else:
+            rec["sig"] = None
         _store_receipt(rec)
         self._send(200, rec)
 

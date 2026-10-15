@@ -87,6 +87,10 @@ examples/            8 sample programs + expected.json (exact expected stdout)
 bench/               TTCP benchmark: `python -m bench.run` (8 tasks, token ratios)
 tests/               pytest suite (160 tests)
 mcp/                 MCP server: eval/transpile/tokens/parse as agent tools (stdio)
+api/                 metered execution API: POST /meter -> HMAC-signed receipts (see notes/metered-api.md)
+billing/             Stripe usage reporting: verify receipts, aggregate tokens-saved
+                     per customer per month, report to billing meter events
+                     (see billing/README.md for the honest status)
 LICENSE              Apache-2.0
 ```
 
