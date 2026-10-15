@@ -1,0 +1,38 @@
+# Terse v0.2 concrete syntax — GBNF grammar (llama.cpp compatible).
+#
+# Purpose: constrained decoding. A model sampling under this grammar can only
+# produce syntactically valid Terse — "zero syntax errors by construction".
+# The grammar enforces SYNTAX only; op-name resolution and arity (E103) are
+# checked by the parser (terse/parser.py), which always reports them as
+# structured TerseError dicts for the repair loop. Unknown list heads parse
+# as function calls; a typo'd op name surfaces at runtime as E200 with a
+# did-you-mean hint, not as a syntax error.
+#
+# Notes for the grammar worker / constrained-decoding harness:
+#   - whitespace and ";" comments are insignificant; "space" covers both.
+#   - negative numbers lex as part of the number ("-" immediately + digits).
+#   - strings support only \" \\ \n \t escapes; no raw newlines inside.
+#   - keywords true/false/null are lexed as atoms, distinct from symbols.
+#   - binding positions (let/for names, fn params) are plain symbols; the
+#     parser enforces that, the grammar does not need to.
+
+root      ::= program
+
+program   ::= space expr (space expr)* space
+
+# any amount of whitespace and/or ;-comments
+space     ::= ([ \t\n\r] | ";" [^\n\r]*)*
+
+expr      ::= list | atom
+
+# Head position is an op name OR a computed function: (fib 20), ((fn (x) x) 5).
+# The two alternatives are disjoint on the first token ("(" vs letter).
+list      ::= "(" space (symbol | list) (space expr)* space ")"
+
+atom      ::= number | string | "true" | "false" | "null" | symbol
+
+number    ::= "-"? [0-9]+ ("." [0-9]+)?
+
+string    ::= "\"" ( [^"\\\n\r] | "\\" ["\\/nt] )* "\""
+
+symbol    ::= [a-zA-Z] [a-zA-Z0-9_?!+\-]*
