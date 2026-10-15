@@ -1,0 +1,1 @@
+(print(fold(acc w)(dict)(list "apple" "pear" "apple" "fig" "pear" "apple" "kiwi" "fig")(inc acc w)))

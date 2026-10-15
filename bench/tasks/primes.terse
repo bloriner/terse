@@ -1,0 +1,2 @@
+(def prime?(n)(if(lt n 2)false(fold(ok i)true(range 2 n)(and ok(ne(mod n i)0)))))
+(print(filter prime?(range 2 31)))
