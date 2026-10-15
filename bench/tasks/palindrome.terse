@@ -1,0 +1,1 @@
+(let s "racecar"(print(eq s(rev s))))

@@ -1,0 +1,1 @@
+(for i(range 1 21)(print(if(eq(mod i 15)0)"fizzbuzz"(eq(mod i 3)0)"fizz"(eq(mod i 5)0)"buzz"i)))
