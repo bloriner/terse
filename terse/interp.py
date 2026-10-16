@@ -166,6 +166,7 @@ class _Interpreter:
             "sub": self._op_sub,
             "mul": self._op_mul,
             "div": self._op_div,
+            "divis": self._op_divis,
             "mod": self._op_mod,
             "pow": self._op_pow,
             "neg": self._op_neg,
@@ -187,6 +188,7 @@ class _Interpreter:
             "fn": self._op_fn,
             "def": self._op_def,
             "fold": self._op_fold,
+            "sum": self._op_sum,
             "call": self._op_call,
             "return": self._op_return,
             "assert": self._op_assert,
@@ -544,6 +546,20 @@ class _Interpreter:
 
     def _op_mod(self, op, args, env):
         return self._arith2(op, args, env, lambda a, b: a % b)
+
+    def _op_divis(self, op, args, env):
+        # ("divis", x, n): True iff x is divisible by n. Fused (eq (mod x n) 0).
+        return self._arith2(op, args, env, lambda a, b: (a % b) == 0)
+
+    def _op_sum(self, op, args, env):
+        # ("sum", coll): sum of a list of numbers.
+        # Fused (fold (acc x) 0 coll (add acc x)).
+        self._arity(op, args, 1, 1)
+        items = self._coerce_listlike(op, self.evaluate(args[0], env), "sum")
+        total = 0
+        for item in items:
+            total += self._as_number(op, item, "as element")
+        return total
 
     def _op_pow(self, op, args, env):
         return self._arith2(op, args, env, lambda a, b: a**b)
