@@ -3,7 +3,7 @@
 <p align="center"><img src="assets/logo.png" width="160" alt="Terse logo"></p>
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-193%20passing-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-219%20passing-brightgreen.svg)](tests/)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](terse/)
 [![Token ratio](https://img.shields.io/badge/tokens-0.60%E2%80%931.00x%20vs%20Python-orange.svg)](bench/)
 
@@ -85,7 +85,7 @@ terse/               the language package (pure Python 3.10+, stdlib only)
 SPEC.md              the language specification (syntax, ops, semantics, errors)
 examples/            8 sample programs + expected.json (exact expected stdout)
 bench/               TTCP benchmark: `python -m bench.run` (8 tasks, token ratios)
-tests/               pytest suite (160 tests)
+tests/               pytest suite (220 tests)
 mcp/                 MCP server: eval/transpile/tokens/parse as agent tools (stdio)
 api/                 metered execution API: POST /meter -> HMAC-signed receipts (see notes/metered-api.md)
 billing/             Stripe usage reporting: verify receipts, aggregate tokens-saved
